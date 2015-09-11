@@ -1,0 +1,15 @@
+{{#sections}}
+  <h2>{{name}}</h2>
+  <ul>
+  {{#content}}
+    <li>
+      <p>
+        <a href="{{primaryFile}}">{{title}}</a>.  {{description}}
+        {{#otherFormats}}
+          (<a href="{{file}}">{{type}}</a>)
+        {{/otherFormats}}
+      </p>
+    </li>
+  {{/content}}
+  </ul>
+{{/sections}}

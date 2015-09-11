@@ -1,0 +1,203 @@
+---
+title: "W&L Courses"
+description: An exploration of data visualization and analysis in R using this year's course data at W&L.
+section: Tutorial
+---
+
+# The Data
+
+Let's get started by loading some "real world" data: a table of course enrollments for this academic year at W&L.
+
+```{r}
+enrollments <- read.table("/home/gregg/cs102/enrollments.txt")
+```
+
+You can look at an overview of this `data.frame` in RStudio by clicking on it in the environment viewer or with:
+
+```{r, eval=FALSE}
+View(enrollments)
+```
+
+Hopefully most of the column names in this data frame are self-explanatory.  
+
+The first thing you should always do when exploring a new data set is get a sense of the data landscape.  The best way to do this is with a visualization...
+
+# Basic Plotting
+
+R features an auto-magical graphing function named `plot`.  You can pass it virtually anything and it will try to draw you a picture.
+
+For example, you can pass it two `numeric` vectors and it will give you a scatter plot:
+
+```{r}
+plot(1:4, 5:8)
+```
+
+Or you can pass it a function and it will draw it's result with reasonable limits:
+
+```{r}
+plot(function(x) { x^2 })
+```
+
+Or you can pass it a return object from an analysis function like `density` which performs a kernal smoothing on a distribution of values, for example our enrollment counts:
+
+```{r}
+plot(density(enrollments$enrollment))
+```
+
+The greatest strength of `plot` is that it will almost always draw something; the greatest weakness of `plot` is that it can be hard to understand what it picked or to make the look pretty (publication quality).  In general, when you're first playing around with a new kind of analysis in R it's a good idea to pass results out to `plot` to see what you get.  The resulting graph is usually useful, if a bit ugly.
+
+However, in today's excercise I'll introduce you to an alternative plugin tool that is among the most widely used in R...
+
+#  ggplot2:  Welcome to the HadleyVerse
+
+The philosphy behind the stock `plot` function in R is that it should nearly always produce a result at all costs to sanity.  Under the hood that result can be customized (see `?par` for graphical parameters), but trying to do so might lead you down a bit of a rabbit hole.
+
+One of the most prolific and influentical contributors to the R software ecosystem has been [Hadely Wickham](http://had.co.nz/).  The package [`ggplot2`](http://docs.ggplot2.org/current/) is his second and most widely adopted attempt to bring sanity back to visualization in R.  Most importantly, the defaults nearly always give you something pretty.
+
+Here's the `ggplot2` version of that last graph:
+
+```{r}
+library(ggplot2)
+```
+
+```{r}
+ggplot(enrollments, aes(enrollment)) + geom_density()
+```
+
+The same plot, but much prettier.  This package is an implementation of a "Grammar of Graphics" (gg) proposed by the great data analyst [Leland Wilkinson](http://en.wikipedia.org/wiki/Leland_Wilkinson).  The idea here is simple:  separate *what* you are visualzing from *how* you are visualzing it.
+
+Let's break down that last call into it's parts:
+
+```{r}
+viz <- ggplot(enrollments, aes(enrollment))
+```
+
+The first argument to `ggplot` is data to use for our visualization; usually a data frame.  The `aes` function sets up aesthetic mappings.  In this case, we state that we are interested in the `enrollment` variable in our data set.
+
+Finally, we apply a visualization mechanism ("geom"s) to our values of interest using the `+` (add) operator:
+
+```{r warning=FALSE}
+viz + geom_density()
+```
+
+But what would this graphic look like if we used a histogram instead?
+
+```{r warning=FALSE, message=FALSE}
+viz + geom_histogram()
+```
+
+The approach with this "Grammar of Graphics" implementation is to offer both [modularity](http://en.wikipedia.org/wiki/Modular_programming) and [composibility](http://en.wikipedia.org/wiki/Composability):  break what you want to visualize into fundamental parts and then offer a number of ways to assemble those parts into a data projection.  It works really well when you are playing with visualizations in an interactive R session. 
+
+Let's see a practical example.  Have you noticed that most values in our data set fall below an enrollment of 50?  Yet we're scaling the x-axis to include some extreme outliers.  We can add a simple graphical declaration to our `ggplot` to focus the view:
+
+```{r warning=FALSE}
+viz + geom_density() + xlim(0, 40)
+```
+
+# Cleaning input data
+
+Above, we arrived at a much more informative view of our class enrollment data by constraining the x-axis range for our density plot.  This suggest that there may be some extreme outliers in the enrollment data set that we will want to cull if we can verify that they are un-interesting data points.
+
+Let's take a look at our most enrolled courses, to see if they are really all of interest to us.  You can use the `order` function to easily sort rows in a `data.frame`:
+
+```{r}
+ordered <- enrollments[order(enrollments$enrollment, decreasing = TRUE),]
+head(ordered[, c("number", "title", "enrollment")], n = 10)
+```
+
+To get a quick view of the most highly enrolled entries, in the first line we've re-ordered the data to sort by enrollment by indexing our `data.frame` with the result of ther `order` function.  On the next line, we use the `head` function to just print the first 10 rows of the re-ordered data (you can use `tail` to print the last rows of a table).  We've also included some column filtering to make the results easier to look out (alternatively, you can use the `View` function if you're workig in RStudio).
+
+Looking at the results it's easy to see why the tail of our enrollment distribution was spread out so far:  bogus highly enrolled course listings like "Spring Option." Let's use indexing to filter out these entries so that we're just working with real courses:
+
+```{r}
+courses <- enrollments[enrollments$enrollment < 49,]
+ggplot(courses, aes(enrollment)) + geom_density()
+```
+
+# Summary statistics
+
+In addition to using visualizations like histograms and density distributions to get a sense of value dispersion in a data set, another good place to start with a new data set is to compute standard summary statistics.  Like `plot`, the built in `summary` function will try to be smart about what it does based on the kinds of values you pass to it.  For example, we can pass in a single vector of numeric values:
+
+```{r}
+summary(courses$enrollment)
+```
+
+We can also pass in a vector of categorical values (a `factor` in statistics lingo):
+
+```{r}
+summary(courses$fdr)
+```
+
+When we passed in a vector of numeric values we were given information about the mean, median, etc; when we passed in a vector of categorical values `summary` changed it's approach and reported counts for each category.  We can also pass in an entire data.frame:
+
+```{r eval=FALSE}
+summary(courses)
+```
+
+# Composing visualizations
+
+`ggplot2` is designed to make it easy to interactively build interesting data visualizations by layering components.  Let's say we're interested in how many people have/are taking classes in each of the FDR areas this year.  We can enhance our simple distribution plots by layering in coloring using the categorical FDR values:
+
+```{r}
+p <- ggplot(courses, aes(enrollment))
+p + geom_density(aes(color = fdr))
+```
+
+Instead of using line color, we can use fill color:
+
+```{r}
+p + geom_density(aes(fill = fdr))
+```
+
+This plot is a little hard to look at because the distributions are on top of eachother, so let's set a transparency value (alpha channel):
+
+```{r}
+p + geom_density(aes(fill = fdr, alpha = 0.5))
+```
+
+This is an example of how we can mix and match references to variables in our data structure and absolute values when composing `ggplot2` visualizations.  Clearly, FDR courses have higher than average enrollments and we teach a lot of writing!
+
+#  Interactions between quantitative variables
+
+Scatter plots are common mechanisms to use to visualize the interaction between quantitative variables.  For example, we can ask how well our expected enrollments correlated with actual enrollments:
+
+```{r}
+p2 <- ggplot(courses, aes(enrollment, expected.cap))
+p2 + geom_point()
+```
+
+Are any outliers correlated with FDR areas?
+
+```{r}
+p2 + geom_point(aes(color = fdr))
+```
+
+How about department?
+
+```{r}
+p2 + geom_point(aes(color = department))
+```
+
+Fortunately, there does appear to be a positive correlation between these two values.  We can fit a model to these data using linear regression.  R features a special "formula" syntax designed to make it easy to express what you are trying to model.  Let's model `enrollment` as a linear function of `expected.cap`:
+
+```{r}
+fit <- lm(expected.cap ~ enrollment, data = courses)
+fit
+```
+
+We can get more information about the fit with `summary`:
+
+```{r}
+summary(fit)
+```
+
+If we want to visualize or model along side our data we can extract the coefficients (slope and intercept in this case) and use an "abline" to plot the function:
+
+```{r}
+b <- coefficients(fit)[1]
+m <- coefficients(fit)[2]
+p2 + geom_point(aes(color = fdr)) + geom_abline(slope = m, intercept = b)
+```
+
+# Your turn...
+
