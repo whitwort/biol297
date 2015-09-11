@@ -1,6 +1,6 @@
 # Website for Bio 297
 
-Sources for the course website for Biol-297:  Bioinformatics and computational biology.
+Sources for the course website for [Biol-297:  Bioinformatics and computational biology](http://rna.wlu.edu/bio297/).
 
 ## Build
 
