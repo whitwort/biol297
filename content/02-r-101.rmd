@@ -1,7 +1,7 @@
 ---
-title: "R 101"
-description: A simple introduction to working with data in R, including working with variables, functions and importing data.
-section: Background
+title: "R 101: variables, values and vectors"
+description: A introduction to working with simple data in R, including how to use variables, different types of values and the basics of vectors.
+section: Exercises
 data:
     - codons.txt
 ---
