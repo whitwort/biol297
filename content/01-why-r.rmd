@@ -72,6 +72,12 @@ Although the popularity of a platform doesn't necessarily equate with it's quali
 
 From [r4stats.com](http://r4stats.com/articles/popularity/).
 
+##
+
+The rapid adoption of R in the tech industry has recently lead to the establishment of the [R Consortium](https://www.r-consortium.org), managed by the Linux Foundation.  Industry backing is a huge shift in the support for R development.  It even includes a splashy video:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/TR2bHSJ_eck" frameborder="0" allowfullscreen></iframe>
+
 # Why not R?
 
 ##

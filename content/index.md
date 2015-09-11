@@ -1,6 +1,6 @@
 ---
 title:  Welcome to Bio 297!
-description:  "Welcome to the main course website for Bioinformatics and Computational Biology. Please use our [sakai site](https://sakai.wlu.edu/portal/site/2015_16_FALL-BIOL_297_01) to access the syllabus and submit assignments."
+description:  "Welcome to the main course website for *Bioinformatics and Computational Biology*. Please use our [sakai site](https://sakai.wlu.edu/portal/site/2015_16_FALL-BIOL_297_01) to access the syllabus, assigned readings, and submit assignments."
 output_formats:
   page: 
     render: 
@@ -8,7 +8,6 @@ output_formats:
         template:   ../templates/index-template.html
         toc: false
   slides: false
-  PDF: false
 ---
 
 {{> site-contents}}
