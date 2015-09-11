@@ -1,4 +1,5 @@
-# Website for Bio 297:  Bioinformatics and Computational Biology
+# Website for Bio 297
+### Bioinformatics and Computational Biology
 
 Course website for Biol-297:  Bioinformatics and computational biology
 
