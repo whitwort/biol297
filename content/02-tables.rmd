@@ -1,0 +1,262 @@
+---
+title: "Working with Tables"
+description: A introduction to working with tabular data in R using data frames.
+section: Exercises
+data:
+    - codons.txt
+---
+
+R has great built-in support for working with data in tabular format.  Tables in R are called data frames.  By convention, response and annotation variables are arranged across the columns and observations down the rows.  Columns, and optionally rows, can also be given unique names.
+
+You can think of data.frame structures as a specialized kind of a list where each component vector (column) is of the same length.
+
+## A note about table structure
+
+Before we dive into loading and working with tabular data in R, it's worth taking a moment to consider a key difference between data formatting expectations in advanced statistical software packages like R and the bad habits most folks develop after years of working in Excel.  If you're used to working in other stats packages like SAS, SPSS or Minitab, you can skip this section.
+
+Let's consider a simple example experimental design:  a response variable measured in two different treatment groups (A, B) over a 4 day period.
+
+Excel has probably trained you to format data something like this:
+
+Day | Group A | Group B
+--- | ------- | -------
+1   | 5       | 5
+2   | 6       | 7
+3   | 7       | 9
+4   | 8       | 11
+
+The reason we have all learned to format the data this way in Excel is that it makes it easy to produce plots: if we select these cells and click the scatter plot wizard, we'll get the desired plot with Day on the X-axis and two sets of points, one for Group A and the other Group B.
+
+Statisticians, and by proxy statistical software packages, object to this formatting for an important reason.  The problem is that we've mixed our concerns in designing the structure of these columns:  (1) *two* different columns contain values for the *same* response being measured; (2) a second variable in this design (treatment) has to be inferred from the column headings.
+
+##
+
+The correct format for this design would be a three column table:
+
+Day | Group   | Response
+--- | ------- | --------
+1   | A       | 5
+1   | B       | 5
+2   | A       | 6
+2   | B       | 7
+3   | A       | 7
+3   | B       | 9
+4   | A       | 8
+4   | B       | 11
+
+
+If you have a lot of data formatted in the first of these two formats, don't worry!  Restructuring your tables is easy to do in R as is generating any new categorical label columns you might need (for example, the Group column above).  The reading assignment for next class (Wickham 2014) goes into the topic of correct data formatting, called "Tidy Data", in greater depth.
+
+## Start the exercise
+
+This document is the first exercise that will ask you to contribute your own solutions.  To get started, make sure you've created a "bio297" project in R Studio (choose "New Directory" then "Empty Project" and use "bio297" for the Directory Name; leave "~" as the parental path).  Then load the `bio297` project.
+
+Once your bio297 project is loaded in R Studio, use the `bio297` package to create a local copy of course exercises and data using the `start` function:
+
+```{r eval=FALSE}
+bio297::start()
+```
+
+If you check your "Files" tab in R Studio you should see a file named "02-tables.rmd" and a new `data` subfolder containing `codons.txt`.
+
+To check your progress as you work through this exercise you can compile the document using the "Knit HTML" button on the R Studio tool bar.
+
+## Loading tabular data
+
+R can import tabular data from a wide variety of source file formats.  Base R has excellent support for loading data from text files using the `read.table` family of functions.  There are also a wide array of R packages that support loading data from databases and other binary file formats.
+
+If you're working in [RStudio](http://www.rstudio.com/), you can use the "Import Dataset" button on the Workspace tab as a convenience to load data from a local file or over the web.  Under-the-hood R Studio is just calling `read.table` for you, which we'll explore below (see the History tab see the command that R Studio generated for you).
+
+The first table we'll work with contains the codon sequences (in RNA format) and the canonical amino acids each encodes.  Using the Files tab, navigate to the `data` folder and open the `codons.txt` text file.  You can see that this table has two columns:  "codon" and "aminoAcid."  
+
+To load the data in `codons.txt` into a variable we'll use the `read.table` function:
+  
+```{r}
+codons <- read.table("data/codons.txt", header = TRUE, stringsAsFactors = FALSE)
+```
+
+Run the line above in your console.  From the Environment tab in R Studio you can click on the "codons" table to verify that it loaded correctly.  In the interactive interpreter, the `head` function is also a nice way to verify that a table was loaded correctly:
+
+```{r}
+head(codons)
+```
+
+The `read.table` function takes a large number of optional arguments which allows it to adapt to a wide variety of different file formats.  See the help page for extensive details.  Here we've specified `header = TRUE` because the first line of our file contains column headings.  The `stringsAsFactors = FALSE` argument tells R not to try to convert text columns to a special type of data structure called a `factor`.  Factors are intended to flag strings as describing levels of a categorical variable.  They are a more advanced topic that we will talk more about later this the week.
+
+## Accessing data in a data.frame
+
+Once your data is loaded into a data.frame (table), you can access vectors of data for individual variables in the table using the `$` syntax:
+
+```{r}
+codons$codon
+```
+
+##
+
+Your turn:  in the code block below print out the contents of the `aminoAcid` variable.
+
+```{r}
+# Enter your code here!
+
+```
+
+##
+
+Remember `length`?  Verify that I have given you a table with all 64 possible sequences:
+
+```{r}
+# Enter your code here!
+
+```
+
+##
+
+If we want to access a single point we can use the full indexing syntax with `[]`.  When we are working with a 2D data structure, we can specific a `[row, col]`:
+
+```{r}
+codons[ 1, 2 ]
+```
+
+##
+
+Indexing a data frame works the same was as it does for a matrix: you can specify as many rows and/or columns as you like.  
+
+Use indexing to print out the first three rows of `codons` (with both columns):
+
+```{r}
+# Enter your code here!
+
+```
+
+As with lists, if your columns (or rows) are named then you can also use a character vector to select elements instead of integers.
+
+##
+
+Prove to yourself that you understand why this is true:
+
+```{r}
+codons$codon == codons[ , "codon"]
+```
+
+
+## Calculating a new column
+
+We can use the `$` syntax (like the `[...]`) to assign data to existing columns on a `data.frame` or to create a new column.  Let's say that we want to add a new column to our `codons` table that will annotate what `type` of amino acid is encoded by each codon (non-polar, polar, acidic or basic).
+
+We can start by creating a new column called `type`.  Let's set the default value for this column to be `NA`:
+
+```{r}
+codons$type <- NA
+```
+
+Have a look at the `codons` data frame to see what happened:
+
+```{r}
+# Enter your code here!
+
+```
+
+##
+
+Here could hand-encode a vector of 20 strings describing the type of each amino acid in our table.  But we'll take a lazier path to learn a few R tricks along the way.  Let's make some vectors that describe which amino acids belong to each of the four categories:
+  
+```{r}
+nonpolar  <- c( "A", "C", "G", "I", "L", "M", "F", "P", "W", "V" )
+polar     <- c( "N", "Q", "S", "T", "Y"                          )
+acidic    <- c( "D", "E"                                         )
+basic     <- c( "R", "H", "K"                                    )
+```
+
+Use the `length` (and possibly `c`) to verify that four variables cover annotations for all 20 amino acids.
+
+```{r}
+# Enter your code here!
+```
+
+##
+
+Now we can update our `type` column using the annotations that we've saved in these variables.  The logical `%in%` operator tests whether or not one vector of values (left side) is found in another (right side).  It returns a vector of boolean values of the same length as the **left-hand** test vector.
+
+For example, which rows contain nonpolar amino acids?  Try this:
+
+```{r}
+codons$aminoAcid %in% nonpolar
+```
+
+##
+
+We can use logical vectors like this to select rows in the codons table using indexing.  If we combine that method of selecting rows with everything else we've learned, we can easily annotate a group of codons in one line:
+
+```{r}
+codons[ codons$aminoAcid %in% nonpolar, "type" ] <- "nonpolar"
+```
+
+Check to see if it worked!
+
+Now annotate the other three groups of amino acids in your table:
+
+```{r}
+# Enter your code here!
+```
+
+Pretty neat, eh?  Working with numeric data in table columns is even more straight forward.  In R, it's very easy to create new columns that are calculated from existing data, as you might be used to doing in Excel.  In R, however, adding complex annotation columns like `type` above is also very simple.
+
+Notice how we accomplished this task by composing a few minimal data structures, followed by a few relatively straight-forward assignments.  We never had to repeat assignment of any of our amino acid types.  In both software design and data analysis we always try to adhere to the "[DRY](http://en.wikipedia.org/wiki/Don't_repeat_yourself)" (don't repeat yourself) principle.  
+
+This is much easier to do when working with tabular data in R than it is in traditional spreadsheet packages or other statistical environments.
+
+## Adding row names
+
+So far we've worked with named columns on our table (e.g. `aminoAcid`, `type`) which has allowed us to refer to columns using character strings.  If each row in your table can be **uniquely** named, you can use a character vector to names to rows for use in indexing.  To do this, use the `row.names` function.
+
+This function can display the current names:
+
+```{r}
+row.names(codons)
+```
+
+How are our rows currently named?
+
+##
+
+Alternatively, you can use it to assign a vector of names with `<-`:
+
+```{r}
+row.names(codons) <- codons$codon
+```
+
+##
+
+Each codon sequence is unique, so I've used this sequence for the names.  We can now index using row names:
+
+```{r}
+codons["AUG", ]
+```
+
+## Translation
+
+Indexing on named rows is a powerful feature.  Let's push it a little further by using our `codons` table to do translation!
+
+Here's a vector of codons that make up a short open reading frame (ORF):
+
+```{r}
+ORF1 <- c("AUG", "GCA", "GGG", "AGC", "GUA", "UGC", "CUU", "UGA")
+```
+
+Use indexing syntax and your codons data frame to translate this ORF.  It can be done in one line!
+
+```{r}
+# Enter your code here!
+```
+
+If you want to get fancy, you might find a use for the `paste` function using the `collapse` argument...
+
+# After class
+
+1.  Finish this exercise (fill in all of the "# Enter your code here!" blocks).  Check for errors by clicking on "Knit HTML" and looking over the document.
+2.  We're your ready, use `bio297::submit("02-tables.rmd")` to submit it.
+3.  Read Wickham 2014 (in "Resources", "Literature" on Sakai) for next class.
+
+[function]: http://en.wikipedia.org/wiki/Function_(programming)
+[variables]: http://en.wikipedia.org/wiki/Variable_(computer_science)
+[expression]: http://en.wikipedia.org/wiki/Expression_(computer_science)
