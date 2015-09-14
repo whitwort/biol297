@@ -2,17 +2,15 @@
 % Please edit documentation in R/tools.R
 \name{view}
 \alias{view}
-\title{Open Biol-297 website in the Viewer pane}
+\title{Open the course website in the Viewer pane}
 \usage{
 view(url = "http://rna.wlu.edu/bio297")
 }
 \arguments{
-\item{url}{A string containing the URL to open.  Defaults to Biol-297 homepage.}
-}
-\value{
-There is no return value.
+\item{url}{A string containing the URL to open.  Defaults to the course
+  homepage.}
 }
 \description{
-Open Biol-297 website in the Viewer pane
+Open the course website in the Viewer pane
 }
 

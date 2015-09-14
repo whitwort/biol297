@@ -306,7 +306,7 @@ If you forget this syntax, just pay attention to how R prints out matrices!
   
 ## Array
   
-An array is a matrix of more than two dimensions.  It's unlikely that you'll need to work with arrays this term, but it's good to know you're looking at if you see one in the wild:
+An array is a matrix of more than two dimensions.  It's unlikely that you'll need to work with arrays this term, but it's good to know what you're looking at if you see one in the wild:
 
 ```{r}
 array(1:8, dim = c(2, 2, 2))
@@ -365,4 +365,3 @@ If you're a computer science guru and were bored to tears with this introduction
 [function]: http://en.wikipedia.org/wiki/Function_(programming)
 [variables]: http://en.wikipedia.org/wiki/Variable_(computer_science)
 [expression]: http://en.wikipedia.org/wiki/Expression_(computer_science)
-
