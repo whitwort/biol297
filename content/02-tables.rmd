@@ -72,7 +72,10 @@ The first table we'll work with contains the codon sequences (in RNA format) and
 To load the data in `codons.txt` into a variable we'll use the `read.table` function:
   
 ```{r}
-codons <- read.table("data/codons.txt", header = TRUE, stringsAsFactors = FALSE)
+codons <- read.table( "data/codons.txt", 
+                      header = TRUE, 
+                      stringsAsFactors = FALSE
+                    )
 ```
 
 Run the line above in your console.  From the Environment tab in R Studio you can click on the "codons" table to verify that it loaded correctly.  In the interactive interpreter, the `head` function is also a nice way to verify that a table was loaded correctly:
