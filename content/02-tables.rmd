@@ -65,7 +65,7 @@ To check your progress as you work through this exercise you can compile the doc
 
 R can import tabular data from a wide variety of source file formats.  Base R has excellent support for loading data from text files using the `read.table` family of functions.  There are also a wide array of R packages that support loading data from databases and other binary file formats.
 
-If you're working in [RStudio](http://www.rstudio.com/), you can use the "Import Dataset" button on the Workspace tab as a convenience to load data from a local file or over the web.  Under-the-hood R Studio is just calling `read.table` for you, which we'll explore below (see the History tab see the command that R Studio generated for you).
+If you're working in [RStudio](http://www.rstudio.com/), you can use the "Import Data set" button on the Workspace tab as a convenience to load data from a local file or over the web.  Under-the-hood R Studio is just calling `read.table` for you, which we'll explore below (see the History tab see the command that R Studio generated for you).
 
 The first table we'll work with contains the codon sequences (in RNA format) and the canonical amino acids each encodes.  Using the Files tab, navigate to the `data` folder and open the `codons.txt` text file.  You can see that this table has two columns:  "codon" and "aminoAcid."  
 
@@ -100,7 +100,6 @@ Your turn:  in the code block below print out the contents of the `aminoAcid` va
 
 ```{r}
 # Enter your code here!
-
 ```
 
 ##
@@ -257,7 +256,7 @@ If you want to get fancy, you might find a use for the `paste` function using th
 # After class
 
 1.  Finish this exercise (fill in all of the "# Enter your code here!" blocks).  Check for errors by clicking on "Knit HTML" and looking over the document.
-2.  We're your ready, use `bio297::submit("02-tables.rmd")` to submit it.
+2.  When you're ready, use `bio297::submit("02-tables.rmd")` to submit the assignment.
 3.  Read Wickham 2014 (in "Resources", "Literature" on Sakai) for next class.
 
 [function]: http://en.wikipedia.org/wiki/Function_(programming)
