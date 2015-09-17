@@ -21,7 +21,7 @@ output_formats:
     # output files.
     file_extension: .html
     
-    # output formats can optionally define list of post processors to call
+    # output formats can optionally define a list of post processors to call
     # during the project build step.  This data structure should be an array of
     # string names which can be parsed and eval'ed at runtime to return a
     # function.  See the built-in post processing functions for examples.
@@ -31,7 +31,7 @@ output_formats:
       - linkData
       - responsiveImages
 
-    # each output format must define a render function.  These data structures
+    # Each output format must define a render function.  These data structures
     # mirror the 'output' bindings in stock R Markdown yaml headers.  The one
     # and only key should be a string that can be parsed and eval'ed at runtime
     # to return an R Markdown output_format function.  Key:value pairs listed
@@ -63,7 +63,7 @@ output_formats:
         mathjax:    null
 
         # The default project template assumes a table of contents will be
-        # generate for each page.  The toc_depth argument defines how deep into
+        # generated for each page.  The toc_depth argument defines how deep into
         # the header hierarchy the contents generator will descend.
         # 
         toc:        true
@@ -77,14 +77,6 @@ output_formats:
     render: 
       ioslides_presentation:
         css: ../app/css/ioslides.css
-
-#   PDF:
-#     file_extension: .pdf
-#     render:
-#       pdf_document:
-#         toc:              true
-#         toc_depth:        2
-#         number_sections:  true
 
 # The default project directory hierarchy.  Note, if you changes paths here, you
 # may also have to update paths in template files and the output_formats 
@@ -101,7 +93,7 @@ paths:
   # the final build directory; place js, css, and other common web resources
   # here.
   app:          app
-
+  
   # Template files that are found in the templates directory are loaded and
   # passed to post processing functions when the project is being built.  In the
   # list of templates passed to post processing functions, template key names
@@ -119,7 +111,6 @@ paths:
 
 # Any additional data bindings defined here will be made available to the 
 # templating engine and post-processing calls.
-#
 templateData:
   siteName: bio297
   baseURL:  http://rna.wlu.edu/bio297/
@@ -150,5 +141,26 @@ outputExternals:
   - template
   - includes
   - css
+  
+# Course Package options TODO :backport to courseR
+package:
 
-
+    # Project and package paths; exposed as internal package data
+    #projectPath:    /home/gregg/biol297 -- generated automatically
+    packagePath:    pkg
+    
+    # Package hook function to call when the project is built
+    buildScript:    update.R #must implement updatePackage(config, manifest, projectPath)
+    preHook:        preBuild
+    postHook:       updatePackage
+    
+    # Student paths
+    homePath:       /home
+    studentProject: bio297
+    dataPath:       data
+    submitPath:     submitted
+    
+    # Instructor project paths (in projectRoot)
+    exercisePath:   exercises
+    studentList:    students.txt #found in exercisePath
+    
