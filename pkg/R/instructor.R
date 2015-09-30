@@ -64,7 +64,7 @@ updateData <- function() {
   invisible(submissionData)
 }
 
-#' TODO
+#' Launch a shiny app with a UI for grading submissions.
 #'
 #' @export
 #'

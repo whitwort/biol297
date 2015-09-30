@@ -2,11 +2,11 @@
 % Please edit documentation in R/instructor.R
 \name{grade}
 \alias{grade}
-\title{TODO}
+\title{Launch a shiny app with a UI for grading submissions.}
 \usage{
 grade()
 }
 \description{
-TODO
+Launch a shiny app with a UI for grading submissions.
 }
 
