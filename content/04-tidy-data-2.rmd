@@ -1,0 +1,79 @@
+---
+title: "Tidy Data (part 2)"
+description: Today we'll continue to explore the Johnson lab Mechanical Turk data set.  Following on the reading for today, we'll talk about how to best coerce our data models to fit with our analysis goals using the `tidyr` package.
+section: Exercises
+data:
+    - johnsonlab.xlsx
+---
+
+# Passing data between sub-projects
+
+In the previous exercise we loaded some data from a primary source file and peformed a series of manipulations.  It would be a terrible idea to overwrite our previous work with these changes; what if we made a mistake?
+
+You should always get in the habit of saving intermediate representations of your data.  A good workflow recommendation would be to think split each unit of a project into a R markdown document that starts with loading data from one source and ends with serializing that data back out to a new source.
+
+At the end of your markdown document for Tidy Data (part 1) add a line that serializes your results.  Since the primary manipulation was turning numeric codes into factors, this might be a reasonable name:
+
+```{r eval=FALSE}
+write.table(jd, "data/jd-factorized.txt")
+```
+
+##
+
+If you run `write.table` with the defaults, your file will load fine using `read.table` also with the defaults:
+
+```{r}
+jdFact <- read.table("data/jd-factorized.txt")
+```
+
+# Welcome to the Hadleyverse:
+
+## Tidyr & dplyr
+
+Over the last few years [Hadley Wickham](http://had.co.nz/) has become one of the most influencial contributors to the R community. Not suprisingly he is now on the R Studio team and part of the Core R group that maintains the language.  In this class we'll be using several of his packages.  They are all notable because they are shining examples of how to do software right:  they break down complex tasks into a few simple operations that are easy to combine.
+
+The `tidyr` package is the software counter part to the article that was assigned for todays reading.  The R Studio group has put together a great set of "cheat sheets" for common R packages and operations. Let's take a look at the one that summarizes how to use `tidyr` and the related package `dplyr`:
+
+[Data Wrangling](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)
+
+##
+
+Both packages are already installed, so they can be loaded with `library`:
+
+```{r}
+library(tidyr)
+```
+
+## 
+
+The two most common functions that you'll use to tidy your data are `gather` and its complement `spread`.
+
+For example, if we want to convert the object task columns to a tidyr format:
+
+```{r}
+jdTidy <- tidyr::gather( jdFact[c(1, 10:ncol(jdFact))]
+                       , key   = "Complexity"
+                       , value = "ObjectAve"
+                       , ObjectsSimpleAve
+                       , ObjectComplexAve
+                       )
+```
+
+# Workshop
+
+After learning a bit more detail about this interesting data set you should use the space below to explore it and reinforce the techniques we've learned!
+
+Here are some things to try out:
+
+* Use the data and formula syntax to do a regression with `lm`
+* Use `t.test` to do a one- or two-sample t-test
+* Use `aov` to do an ANOVA
+* Use the `density` or `lines` functions to spice up your graphs
+
+You should be able to figure these functions out with the information we've covered!
+
+```{r grade=TRUE}
+levels(jdTidy$Complexity) <- c("simple", "complex")
+write.table(jdTidy, "data/jd-tidy.txt")
+```
+

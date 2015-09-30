@@ -1,0 +1,214 @@
+---
+title: "Tidy Data (wrap up)"
+description: A quick look at basic statistics in R.
+section: Exercises
+data:
+    - johnsonlab.xlsx
+---
+
+# Source data
+
+Did you write out the results of your work at the end of the last exercise?  I did!  We can load both source tables:
+
+```{r}
+jdFact <- read.table("data/jd-factorized.txt")
+jdTidy <- read.table("data/jd-tidy.txt")
+```
+
+# Simple hypothesis testing
+
+At the end of the last exercise I pointed you towards two functions that perform simple hypothesis testing procedures:  `t.test` ([Student's t-test](https://en.wikipedia.org/wiki/Student%27s_t-test)) and `aov` ([ANOVA](https://en.wikipedia.org/wiki/Analysis_of_variance)). What are these procedures and how does hypothesis testing work?
+
+Let's start by parsing the crowd sourced answer: the first sentences on the Wikipedia pages for each.
+
+##
+
+> A t-test is any statistical hypothesis test in which the test statistic follows a Student's t-distribution if the null hypothesis is supported. It can be used to determine if two sets of data are significantly different from each other, and is most commonly applied when the test statistic would follow a normal distribution if the value of a scaling term in the test statistic were known.
+
+##
+
+R has functions that return values from all of the commonly used statistical distributions (and many uncommon ones as well!).  The help page for the Student t distribution summarizes the common set of functions you'll find for most distributions:
+
+```{r eval=FALSE}
+?TDist
+```
+
+The naming convention is: `dx`is the density function, `px` the probability or distribution function, `qx` the quantile function and `rx` is a random sampling function, where `x` is the given distribution (in this case `t`).
+
+##
+
+For those who have never looked at the Students t distribution of values, we can plot a sample:
+
+```{r}
+plot( dt(-10:10, 1) )
+```
+
+##
+
+> Analysis of variance (ANOVA) is a collection of statistical models used to analyze the differences among group means and their associated procedures (such as "variation" among and between groups), developed by statistician and evolutionary biologist Ronald Fisher.
+
+Fire up the [ANOVA Playground](http://rna.wlu.edu/shiny-apps/anovaPlayground/) app and we'll talk about how these tests work.
+
+# Expressing hypotheses with formulas
+
+We've taken a sneak peak at the `formula` syntax in R with the plot function, but as a reminder the basic syntax for describing a model is: 
+
+`A ~ B`
+
+Where `A` is the dependant or response variable and `B` is the independant or predictor variable.  More properly this form can be read as the model: `A` is a function of `B`.
+
+##
+
+Naturally, R hypothesis testing functions will take model expressions as their input (it's why R has them).  For example, if we wanted to test the following model using our tidy version of the Johnson lab data:
+
+Average task time (`ObjectAve`) is a function of task complexity (`Complexity`)
+
+We could use this formula syntax in a call to `t.test`:
+
+```{r}
+t.test(ObjectAve ~ Complexity, data = jdTidy)
+```
+
+Interesting!  It's always good to look at a picture to sanity check the test you just ran.  Since we're modeling a quantitative variable as a function of a categorical variable, a `boxplot` is a good choice:
+
+```{r}
+boxplot(ObjectAve ~ Complexity, data = jdTidy)
+```
+
+##
+
+We can use the `aov` function to test the same model using an ANOVA.  The ANOVA function retuns a more complex value that t-test (which includes the regression model in addition to test results), so we'll need to call `summary` to see F-statistic and related p-value: 
+
+```{r}
+test <- aov(ObjectAve ~ Complexity, data = jdTidy)
+summary(test)
+```
+
+In this case we would expect the ANOVA to give us a very similar prediction to the t-test.  For fun, try running this:
+
+```{r eval=FALSE}
+plot(test)
+```
+
+The `plot` function is magic!
+
+##
+
+The ANOVA procedure allows you to test more complex models than a standard t-test.  We can model task time as a function of a variable with multiple groups, like `Education`:
+
+```{r}
+summary(aov(ObjectAve ~ Education, data = jdTidy))
+boxplot(ObjectAve ~ Education, data = jdTidy)
+```
+
+##
+
+You can use `+` to add predictors to a model.  For example, if we hypothesized that both the complexity of the task and the gender of the participant contribute to the task time:
+
+```{r}
+summary(aov(ObjectAve ~ Complexity + Gender, data = jdTidy))
+```
+
+##
+
+In some cases you might hypothesis that not only do two predictor variables influence a response variable, but that they [interact](https://en.wikipedia.org/wiki/Interaction_(statistics)) (have a non-additive effect on the response).  You can use `:` to specify an interaction.  For example:
+
+```{r}
+summary(aov(ObjectAve ~ Complexity:Gender, data = jdTidy))
+```
+
+##
+
+Here's the same along side the previous models:
+
+```{r}
+summary(aov(ObjectAve ~ Complexity + Gender + Complexity:Gender, data = jdTidy))
+```
+
+Because this is a common formulation, you can use a `*` to do the same:
+
+```{r}
+summary(aov(ObjectAve ~ Complexity * Gender, data = jdTidy))
+```
+
+##
+
+Let's look at a picture to see what's going on there:
+
+```{r}
+boxplot(ObjectAve ~ Complexity * Gender, data = jdTidy)
+```
+
+##
+
+See the help page for `formula` for additional syntax that can be used in formula expressions.
+
+##
+
+Prove to yourself that you followed along above by testing a couple more interactions in this data set:
+
+```{r grade=TRUE}
+summary(aov(ObjectAve ~ Complexity:Gender, data = jdTidy))
+```
+
+# Regression
+
+Although sometimes conflated, the ANOVA procedure is independant of the underlying regression model it's being used to evaulate.  If you look at the help page for the `aov` function, you'll see it has been running a linear regression for us using `lm`.  If you need to run an ANOVA with finer grain control over the regression use `anova` instead.
+
+Of course you can use the `lm` function with a formula directly to perform the regression yourself.  Here's a plot we looked at after loading up the original data set:
+
+```{r}
+plot(VelcroTime ~ VacuumTime, data = jdFact)
+```
+
+##
+
+The outliers in the data make it difficult to visually assess correlation between these two variables.  Let's see what we get if we fit a linear model to the data:
+
+```{r}
+fit <- lm(VelcroTime ~ VacuumTime, data = jdFact)
+fit
+```
+
+##
+
+For a simple linear model, the two model coefficients are probably familiar to you as the "y-intercept"" and the "slope".  You can extract the coefficients of a model into a numeric vector using `coefficients`:
+
+```{r}
+cf <- coefficients(fit)
+cf
+```
+
+##
+
+As was the case for the `aov` function, summary will provide more details about the result of fitting a linear model:
+
+```{r}
+summary(fit)
+```
+
+##
+
+We can plot the fitted model on top of our scatter plot using `abline`:
+
+```{r}
+plot(VelcroTime ~ VacuumTime, data = jdFact)
+abline(reg = fit)
+```
+
+##
+
+The formula syntax is extremely expressive.  For example, if we wanted to model logarithmic relationship using linear modeling we could use an expression like this (although this is a STUPID idea for this data):
+
+```{r}
+lm(VelcroTime ~ log(VacuumTime), data = jdFact)
+```
+
+
+# After class
+
+* Read Goffeau et al. 1996
+* Make sure you have a working solution to the translation problem at the end of Working with Tables exercise (#2).
+
+
+

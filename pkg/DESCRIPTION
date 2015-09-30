@@ -1,9 +1,9 @@
 Package: bio297
 Title: Course resources and tools for Biol-297
-Version: 0.1
+Version: 0.4
 Authors: person("Gregg", "Whitworth", email = "whitworthg@wlu.edu", role = c("aut", "cre"))
 Description: This package provides utilities and data sets for Biol-297: Bioinformatics and Computational Biology.
 Depends: R (>= 3.2.2)
 License: GPLv2
-Imports: rstudio, yaml
+Imports: rstudio, yaml, markdown
 LazyLoad: true

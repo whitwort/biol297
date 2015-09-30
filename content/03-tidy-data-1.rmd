@@ -8,7 +8,7 @@ data:
 
 For the last exercise I prepared a simple table for your to work with (`codons.txt`) that would be very easy to load into an R data frame with `read.table`.  It was already formatted to work with the defaults and had a very simple structure.  When working with data in-the-wild things are rarely quite so easy.  You'll often need to read data in from binary or proprietary formats and tidy up the input before you can start working with the data in R.  For many projects this data wrangling phase is actually the hardest part.  In this first case study, we'll walk through importing and tidying an example data set originating in an Excel document.
 
-## Start the exercise
+# Start the exercise
 
 To update your project with the data and `.rmd` file for this exercise, run:
 
@@ -18,13 +18,13 @@ bio297::start()
 
 To check your progress as you work through this exercise you can compile the document using the "Knit HTML" button on the R Studio tool bar.
 
-## Mechanical Turk survey
+# Mechanical Turk survey
 
 [Mechanical Turk](https://www.mturk.com/mturk/welcome) (or "mturk") is an Amazon platform for recruiting large numbers of humans to do simple tasks that algorithms aren't good at doing.  The Johnson Lab also uses this platform to recruit large numbers of human participants to studies of human cognition.  Today we'll be working with an example data set that they've provided.
 
 Download the file `johnsonlab.xlsx` from the `data/` subfolder and take a quick look at it in Excel.
 
-## Reading from an Excel file
+# Reading from an Excel file
 
 A number of R packages designed to read data from Excel into an R data frame have been released over the years.  The most recent (and best in my opinion) is the `readxl` package.
 
@@ -42,7 +42,7 @@ To load the functions in `readxl` into our current session, we'll use `library`:
 library(readxl)
 ```
 
-## Packages and help pages
+# Packages and help pages
 
 The best place to start with a new package is to take a look at the list of functions it exports.  In RStudio, click on the "Packages" tab and click the link for the `readxl` package.
 
@@ -54,7 +54,7 @@ ls("package:readxl")
 
 This package is pretty simple.  It exports just two functions: `excel_sheets` and `read_excel`.  Read through the help pages for both and make sure you are able to parse the instructions.
 
-## Loading data from Excel
+# Loading data from Excel
 
 The `read_excel` function seems simple enough!  Let's use it to load data from the first sheet:
 
@@ -64,7 +64,7 @@ jd <- read_excel("data/johnsonlab.xlsx")
 
 Why didn't we have to specify a `sheet` argument above?
 
-## Getting the lay of the land
+# Getting the lay of the land
 
 Take a look at the data frame using the RStudio viewer.  You can click on it in the "Data" section of the "Environment" tab or if you'd rather type than click:
 
@@ -111,7 +111,7 @@ class(jd$Gender)
 
 What happened here?  Why?  We'll want to clean this up before throwing our data into summary or plotting functions.
 
-## The facts about Factors
+# The facts about Factors
 
 R has a special type of vector designed to model categorical values:  the `factor`.  For folks new to R, the difference between `character` vectors and `factors` can be a bit confusing, since both hold text (and `factors` are quite unique to the R data model).  However, it's important to keep them straight and be sure you're using the right tool for your data.  In general:
 
@@ -149,7 +149,7 @@ gender[ c(1, 1, 2, 2, 1) ]
 
 Are you starting to feel like an indexing ninja yet?  Make sure you understand what happened there before you go on!
 
-## Using factors to model categorical data
+# Using factors to model categorical data
 
 R stats and plotting functions are usually smart about factors and will apply logic that is appropriate to categorical data when given factors as a variable.  Because of this, it's a good idea to make sure all of the categorical columns on your data frames are converted to factors before you start exploring the data.
 
@@ -167,12 +167,12 @@ Check to make sure that worked and verify that you understand why it did!
 
 Your turn: turn the other variables that should be categorical into factors.  Do this part of the exercise after class.
 
-```{r}
+```{r grade=TRUE}
 # Enter your code here!
 
 ```
 
-## Summary statistics
+# Summary statistics
 
 Now that we've tidied up our data frame we're ready to start exploring it.  R provides a handy `summary` function that provides summary information that is appropriate for the input data type.
 
@@ -191,7 +191,7 @@ summary(jd$Gender)
 
 Notice how the statistics that are calculated are different for different types of vectors.  The summary function is a little bit magical in this regard.
 
-## Basic plotting
+# Basic plotting
 
 Just like `summary`, the plotting functions like `plot` and `boxplot` are also a little bit magical in R.
 
@@ -209,7 +209,7 @@ Or make a scatter plot with two:
 plot(jd$VacuumTime, jd$VelcroTime)
 ```
 
-## Formula syntax
+# Formula syntax
 
 In data analysis, you're often exploring how variables interact with a particular model in mind.  For example, if we were to use that last scatter plot to do a regression analysis our model would have been:  does VelcroTime vary as a function of VacuumTime?
 
@@ -231,15 +231,23 @@ The `plot` function works well when comparing two quantitative variables.  If yo
 boxplot(Age ~ Gender, data = jd)
 ```
 
-## Your turn
+# Your turn
 
 Use `plot` and `boxplot` to explore several other interactions in this data set!
 
-```{r}
-# Enter your code here!
+```{r grade=TRUE}
+language   <- factor(c("english", "esl"))
+ethinicity  <- factor(c("white", "black", "native american or alaskan", "asian", "hispanic or latino", "arab", "other"))
+education  <- factor(c("some high school or GED", "high school", "certificate", "some college", "associates degree", "BA", "MS", "PhD, JD or MD"))
+employment <- factor(c("full", "part", "unemployed", "student", "parent", "retired", "other"))
 
+jd$Language   <- language[jd$Language]
+jd$Ethinicity <- ethinicity[jd$Ethinicity]
+jd$Education  <- education[jd$Education]
+jd$Employment <- employment[jd$Employment]
+
+write.table(jd, "data/jd-factorized.txt")
 ```
-
 
 # After class
 

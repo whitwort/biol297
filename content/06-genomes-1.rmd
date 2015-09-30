@@ -1,0 +1,317 @@
+---
+title: "Genome annotation (part 1)"
+description: In this exercise you will write a set of functions that find and annotation genomic features in raw DNA sequence.  Along the way we'll learn some best-practices for organizing our code and data structures.  We'll also explore regular expressions, a powerful declarative language for finding pasterns in text.
+section: Exercises
+data: data/chr01.fsa
+---
+
+# Explorying Genomes
+
+In this set of exercises we are going to perform a *de novo* annotation of the a yeast chromosome.  We'll be using R to find Open Reading Frames (ORFs) on yeast chromosomes, search for introns, and annotate the locations of common transcription factor binding sites.
+
+# Preface on Best Practices
+
+## Using functions to organize code
+
+R features a relatively simple and unambiguous syntax.  This means that you, as an author of R code, have a lot of leeway to format your code in any way you see fit.  Please use this feature of the language for good not evil!
+
+>  Your code should function as a document meant for other people to read; it is a narrative that tells a story about computation.  That machines can parse and execute your code is a happy side effect of a well-designed language.
+
+One of the most important language features of modern languages designed to help you organize your code is the function.  You can declare your own functions in R, using the function syntax:
+
+##
+
+To create a function:
+
+```{r}
+addTwo <- function(a, b) {
+  a + b
+}
+```
+
+Here the `function` keyword created a function, which we then saved in the addTwo variable.  Functions are "first class" in R meaning that they can be assigned to variables and passed around like any other kind of data.
+
+The variables that you pass into a function are called its arguments; the result of calling a function is called its value.  In R *all* functions have values.  By default the value of a function is the result of the last computation it performed; there's no explicit `return` statement.  However, if you'd like to explicitly stop running a function and return a value before the end of the function code you can use the `return()` function.
+
+##
+
+Arguments to functions can have default values.  For example:
+
+```{r}
+addThree <- function(a, b = 1, c = 1) {
+  a + b + c
+}
+addThree(1)
+addThree(1, 2)
+addThree(1, c = 4)
+```
+
+Also note, since function can be bound to variables, they can also be passed to other functions as arguments.  We'll see an example of this in our `translate` function below
+
+## Matters of Style (and style matters!)
+
+After class, please take a moment to read over either [Hadley Wickham's recommended R style guide](http://adv-r.had.co.nz/Style.html) or the [Google R Style guide](https://google-styleguide.googlecode.com/svn/trunk/Rguide.xml) (for googlers), which are roughly equivalent.  You might notice that there are a couple discrepancies between these two guides (and my own coding style).  
+
+##
+
+I won't strictly enforce one style, but I do ask that you follow two rules:
+
+* ALWAYS be consistent.  
+
+  For example, you may pick from any of the three variable naming conventions (`my.variable`, `my_variable`, or `myVariable`), but ALWAYS use the same convention throughout all of your code.  I use the latter style for standard variable names (it's called camel case).
+
+* Keep each line of code to 80 characters or less
+
+  Use newlines to break things up.  You can turn on an 80 character guide in RStudio from the Tools -> Global Options -> Code Editing pane.
+
+##
+
+Finally, I'll admit a style quirk that I picked up when submitting code to a non-R code project a few years ago:  the [common-first style](https://www.npmjs.org/doc/misc/npm-coding-style.html).
+
+In R, arguments to functions are separated by commas, so we might create a named vector like:
+```{r}
+myVar <- c(a = 10, b = 100, c = 12, d = 14, exz = 142, f = 1293, g = 0, h = NA)
+```
+
+If your list of arguments is long, or have complex expressions for their values, it is often nice to split each element onto it's own line, like (notice the extra spacing to make all of the "=" signs line up nicely (as noted in the Google style guide):
+
+##
+
+```{r}
+myVar <- c(a    = 10, 
+           b    = 100, 
+           c    = 12, 
+           d    = 14, 
+           exz  = 142, 
+           f    = 1293, 
+           g    = 0, 
+           h    = NA)
+```
+
+##
+
+In the comma-first style, you ... put the comma first:
+
+```{r}
+myVar <- c( a    = 10
+          , b    = 100
+          , c    = 12
+          , d    = 14
+          , exz  = 142
+          , f    = 1293
+          , g    = 0
+          , h    = NA
+          )
+```
+
+##
+
+Notice that the open parens `(`  commas `,` and close parens `)` are all vertically aligned.  Why would you do this?  Well, try to find the syntax error in the following two code blocks:
+
+```{r eval=FALSE}
+myVar <- c(a    = 10, 
+           b    = 100, 
+           c    = 12, 
+           d    = 14 
+           exz  = 142, 
+           f    = 1293, 
+           g    = 0, 
+           h    = NA)
+
+myVar <- c( a    = 10
+          , b    = 100
+          , c    = 12
+          , d    = 14
+          , exz  = 142
+            f    = 1293
+          , g    = 0
+          , h    = NA
+          )
+```
+
+Which did you see first?  The comma-first style is also quite useful when working with nested data structures.
+
+However, use of this style is still controversial, even in the community where it originated (Javascript).  But I found it solved two problems I frequently had: missing commas when rapidly iterating over different argument sets for function calls and missing close parens in nested call structures, so I adopted it when writing in languages that can support this syntax (it won't work in Python because of the privileged nature of white-space).  You're welcome to use either style as long as you are consistent.
+
+# Step 1: transcribe and translate
+
+## A transcribe function
+
+We're going to create a `transcribe` function with an **interface** that will meet our needs.  When we talk about a function's interface, we mean (a) what the function expects you to pass into it as arguments, and (b) what the result of the function is, or it's value.  
+
+Today we're going to practice the good habit of using comment lines to keep a clear record of the interface for each of our functions, so that we don't get confused.
+
+Here's a template for our transcribe function:
+
+``` {r eval = FALSE}
+# Transcibes DNA sequence into RNA equivalent
+#
+# dna   A character string containing DNA sequence
+#
+# value A character string containing RNA sequence
+#
+transcribe <- function(dna) {
+  
+}
+````
+
+```{r grade = TRUE}
+transcribe <- function(dna) {
+  gsub( pattern     = "T"
+      , replacement = "U"
+      , x           = toupper(dna)
+      , fixed       = TRUE
+      )
+}
+```
+
+##
+
+See how we've used the comment lines to clearly describe:
+
+* What our function does (fist line)
+* What kinds of data we expect for the arguments (dna)
+* What kinds of data the function produces (value)
+
+We'll write descriptions like this for all of the functions we include in our analysis files.
+
+## 
+
+Here is the suggested building block for your `transcribe` function:
+
+* `gsub`
+* `toupper` or `tolower`
+
+Look up the help page for these functions to see how they work.  For `gsub` we'll cover regular expressions later in this exercise; for now you'll want to use `fixed = TRUE`.
+
+##
+
+Now let's test your transcribe function with some sample input:
+
+``` {r}
+transcribe("ATGCTTATCTA")
+transcribe("atgcttatcta")
+````
+
+If you got different results, go back and try to fix your function.
+
+
+## A translate function
+
+Now lets write a a `translate` function that follows the following template:
+
+``` {r}
+# Translates RNA sequence into amino acid sequence
+#
+# rna   A character string containing RNA sequence
+#
+# value A character string containing amino sequence
+#
+translate <- function(rna) {
+  
+  # Read the genetic code into a data.frame from "data/codons.txt"
+  
+  # Split the `rna` string into a vector of codons
+  
+  # Return the amino acid sequence as a string
+  
+}
+````
+
+```{r grade = TRUE}
+translate <- function(rna) {
+
+  codonTable  <- read.table( "data/codons.txt"
+                           , header            = TRUE
+                           , row.names         = "codon"
+                           , stringsAsFactors  = FALSE
+                           )
+
+  codons      <- sapply( seq( from = 1
+                            , to   = nchar(rna) - (nchar(rna) %% 3)
+                            , by   = 3 
+                            )
+                       , function(n) {
+                            substr(rna, start = n, stop = n + 2)
+                         }
+                       )
+  
+  paste( codonTable[codons, "aminoAcid"]
+       , collapse = ""
+       )
+  
+}
+```
+
+##
+
+The translate function is going to be a bit trickier to implement than transcribe was, so I've included a few comment lines inside of the function to try to guide you.  It's always a good idea to start with a high level outline of what a function needs to do before you get into the weeds trying to implement specific features.
+
+##
+
+Note, we've explicitly stated that our function should tale a **single** character string containing RNA sequence and return a **single** character string containing the amino acid sequence.  
+
+Consider the difference between:
+
+```{r}
+a <- c("ATG","CTT","ATC")
+b <- "ATGCTTATC"
+a == b
+```
+
+Make sure you understand why these two vectors are different before moving on!
+
+##
+
+Here are the suggested building blocks for your translation function:
+
+* `read.table` note the `stringsAsFactors` and `row.names` arguments
+* `sapply`
+* `substr`
+* `seq`
+* `paste` note the `collapse` argument
+
+##
+
+The tricky one here is going to be `sapply` but it will be key to splitting up the input `rna` sequence into codons that we can translate (along with `substr`).  Remember how we noted above that functions are saved in variables, which means they can be passed as arguments to other functions?  The *apply functions in R make use of this.
+
+Hopefully you're becoming comfortable with vectorized operations in R.  For example:
+
+```{r}
+a <- c(1, 2, 3, 4)
+a + 1
+```
+
+##
+
+This works because R applies the `+` (add) function to each element of the vector a.  But what if we want to apply our own functions to each element of a vector to do something more complicated?  This is where the *apply functions come in.  In a contrived example we could use `sapply` to achieve the same result as above.
+
+The `sapply` (for **s**imple apply) takes a vector and a function to apply:
+
+```{r}
+sapply( a, function(n) { n + 1 } )
+```
+
+As a hint for writing your translate function think about the following recipe for splitting the input RNA sequence into a vector of codons to translate:
+
+* Use `seq` to generate codon start positions in `rna`
+* Use codon start (and stop) positions with `substr` to extract codon sequence
+* Use `sapply` and a custom function to run `substr` for each codon
+
+##
+
+Once you've implemented a `translate` function, test it with some different with some different inputs:
+
+```{r}
+translate("AUG")
+translate("UUCUAAAUUAACAAAAUC")
+translate("UUCUAAAUUAACAAAAU")
+translate("UUCUAAAUUAACAAAA")
+````
+
+Did those last two lines fail for your function or did it work?  If you got an error or an "NA" at the end of your result vector, let's make our `translate` function a little bit smarter, so we don't have to worry about it choking on input strings that aren't evenly divisible by 3.  The easiest thing to do is to just have it ignore incomplete final codons.  
+
+(Hint: check out the `nchar` function along with the  modulo operator `%%`/)
+
+When your function is working on all of the inputs above, you're ready to move on to step 2!
+

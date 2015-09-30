@@ -1,0 +1,183 @@
+---
+title: "Genome annotation (part 2)"
+description: In this lab you we continue putting together the building blocks of a genome annotation suite by writing a function to find open reading frames (ORFs).
+section: Exercises
+data: data/chr01.fsa
+---
+
+# Step 2: Writing an ORF finder
+
+## Function template 
+
+With our `transcribe` and `translate` functions done, we now have the tools in place that we'll need to write a function that finds ORFs.  This function will take a string containing a sequence of amino acids and find *all* of the possible ORFs in that string.  The logic of this function will be to identify stretches of amino acids that start with a methionine ("M") and end with one of our stop codons ("X").  This function should also accept a 'cutoff' argument which will be used to filter ORFs that are too short to be believable.
+
+Let's start off by adding a template for the `findORF` function to our `genomeAnnotation.r` script.
+
+``` {r eval = FALSE}
+# Returns a data.frame describing the ORFs found in the given aminoacid sequence
+#
+# aminoacids  A character string containing aminoacid sequence
+# cutoff      An integer giving the minimum aminoacid length of valid ORFs
+#
+# value       A data.frame, coordinates refer to amino acid position
+#
+findORF <- function(aminoacids, cutoff = 100) {
+
+}
+```
+
+So what's the first thing this function is going to need to do?  We want it to find stretches of amino acids that look like they correspond to real open reading frames.  What's the best way to look for small patterns in larger strings?  The answer is regular expressions.
+
+## Regular expressions
+
+Regular expressions are a powerful tool available in many programming languages which are designed to find patterns in text.  Regular expressions are a mini-programming language all of their own which allows us to describe many different types of complex patterns.
+
+In this case the pattern we need to find is:
+
+`M...X`
+
+Where "M" is a methionine, "X" is one of our stop codons, and "..." represents a variable number of amino acids between M and X.  Furthermore, we want to find ALL of the non-overlapping instances of the "M...X" pattern in our input amino acid sequence.
+
+You can read about the full power of the [regular expression syntax](http://stat.ethz.ch/R-manual/R-devel/library/base/html/regex.html) in the R help, but for today I'll guide you through how to write them.
+
+##
+
+Our regular expression pattern is going to be the string:
+
+`"M(.*?)X"`
+
+Here's what's going on in the pattern:
+
+* The "M" at the beginning says 'look for patterns that start with M'
+* The "X" at the end says '...and end with X'
+* The "(...)" adds a subpattern that we'll search for between the M and X
+* "." says 'find any character that isn't a space'
+* The "*" says 'find between 0 and an infinite number of those non-space characters'
+* The "?" says 'but make the stuff inside of the "(...)" as small as possible, while still conforming to my other rules'. 
+
+If we didn't add the "?" this pattern would match starting at the first M in our sequence -- then gobble up all other M's and X's -- until it hit the last X in the sequence.  Obviously, not what we want!
+
+All of the functions listed on the help page for `?sub` can take regular expressions as their search patterns.  Today we'll use `gregexpr` (global regular expression) function.
+
+##
+
+When trying to learn how a new function works, it's often useful to make up some example data that will make it easy to discover what a function is doing.  Let's make a sample "amino acid" sequence that will be easy to keep track of.
+
+``` {r}
+sampleAminoAcids <- "aaaaMbbbbXccccMddddXeeee"
+````
+
+See what I did there?  If everything is working correctly we should find "MbbbbX" and "MddddX" and nothing else.
+
+Let's give `gregexpr` a whirl with our sample data and our regular expression:
+
+``` {r}
+gregexpr( pattern = "M(.*?)X", text = sampleAminoAcids )
+````
+
+There's a lot going with the output from this function -- we're starting to get a peak at some advanced R features.  But notice that line that has the vector `5, 15`?  That suspiciously similar to the positions of our "M"'s in the sample string.  See the line that has the vector `6, 6`?  Rather interesting, since both of our sample ORF sequences should be 6 amino acids long!  As a novice user, you should be thinking to yourself "I think this is going to work for us"!
+
+The structure being returned by `gregexpr` is called a `list`.  It's kind of like a basket that can hold other smaller types of data, like vectors.
+
+##
+
+Try the following:
+
+``` {r}
+matches         <- gregexpr(pattern = "M(.*?)X", text = sampleAminoAcids)
+startPositions  <- as.vector(matches[[1]])
+lengths         <- attr(matches[[1]], "match.length")
+
+startPositions
+lengths
+````
+
+Let's also use our knowledge of `substring` (note the differences between `substr` and `substring`) to get the actual amino acid sequence:
+
+##
+
+``` {r}
+orfSequence <- substring( sampleAminoAcids
+                        , first = startPositions
+                        , last  = startPositions + lengths - 1
+                        )
+````
+
+What does orfSequence hold now?  Why do we need the "-1" in the last argument?  
+
+So now we know how to write code that will match all of the possible ORFs in a sequence of amino acids!  Now let's think about how we want to collect our ORF information in a user friendly way.
+
+## Creating a data.frame
+
+We've used data.frame's before by loading tabular data in from files, but you can also create them *de novo* from with in an R session.  The syntax is:
+
+``` {r}
+data.frame( variable1 = c(1,2,3,4)
+          , variable2 = c("a","b","c","d")
+          )
+````
+
+See what happened there?  Each argument will become a column heading in your data.frame, and its value will become the data in that column.  You'll want to make sure your value vectors are all the same lengths or you'll get an error.
+
+##
+
+So how can we store our ORF information in a convenient tabular format?  With something like this:
+
+``` {r}
+orfTable <- data.frame( startPosition = startPositions
+                      , length        = lengths
+                      , aminoacids    = orfSequence
+                      )
+````
+
+Take a look at the contents of orfTable.  It's time to take all of the parts we've just looked at and assemble them back into a whole.  
+
+Once you've created a data.frame in your code you can easily write it out to a file with the `write.table` function.
+
+## Write your findORF function
+
+Return to the template for your `findOrf` function above and fill in the function body.  You'll need to use all of the parts we've just covered to implement this function.
+
+Note that one thing we promised that this function would do that we haven't discussed yet is filtering out ORFs that are below the size given by the `cutoff` argument.  You will probably need to use your knowledge of indexing (`[]`) to filter the final version version of your orfTable based on the values in the `length` column.
+
+```{r grade = TRUE}
+
+# Returns a data.frame describing the ORFs found in the given aminoacid sequence
+#
+# aminoacids  A character string containing aminoacid sequence
+# cutoff      An integer giving the minimum aminoacid length of valid ORFs
+#
+# value       A data.frame, coordinates refer to amino acid position
+#
+findORF <- function(aminoacids, cutoff = 100) {
+
+  matches <- gregexpr(pattern = "M(.*?)X", text = aminoacids)
+  starts  <- as.vector(matches[[1]])
+  lengths <- attr(matches[[1]], "match.length")
+  
+  df <- data.frame( aa.start   = starts
+                  , aa.length  = lengths
+                  , aa.seq     = substring( aminoacids
+                                          , first = starts
+                                          , last  = starts + lengths - 1
+                                          )
+                  )
+  
+  df[df$aa.length >= cutoff,]
+}
+```
+
+Let's test our implementation to make sure it works on contrived inputs:
+
+``` {r}
+# This should fail
+findORF("aaaaMbbbbXccccMddddXeeee")
+
+# This should work
+findORF("aaaaMbbbbXccccMddddXeeee", cutoff = 5)
+
+# So should this
+many <- paste( rep("aaaaMbbbbXccccMddddXeeee", times = 100), collapse = "ffff" )
+findORF(many, cutoff = 5)
+````
+

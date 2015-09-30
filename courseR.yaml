@@ -142,7 +142,7 @@ outputExternals:
   - includes
   - css
   
-# Course Package options TODO :backport to courseR
+# Course Package options TODO: backport to courseR
 package:
 
     # Project and package paths; exposed as internal package data
@@ -150,8 +150,8 @@ package:
     packagePath:    pkg
     
     # Package hook function to call when the project is built
-    buildScript:    update.R #must implement updatePackage(config, manifest, projectPath)
-    preHook:        preBuild
+    buildScript:    update.R # must implement f(config, manifest, projectPath)
+    preHook:        preBuild # must return config and implement f(config, contentFiles, projectPath))
     postHook:       updatePackage
     
     # Student paths
@@ -164,3 +164,36 @@ package:
     exercisePath:   exercises
     studentList:    students.txt #found in exercisePath
     
+    # TODO: document
+    grades:
+      default: NC
+      values:
+        A:
+          text:           "Awesome!"
+          status:         "success"
+          insertSolution: true
+          done:           true
+          color:          "green"
+          icon:           "thumbs-up"
+        P:
+          text:           "OK"
+          status:         "warning"
+          insertSolution: true
+          done:           true
+          color:          "orange"
+          icon:           "thumbs-up"
+        F:
+          text:           "Not quite there yet"
+          status:         "danger"
+          insertSolution: false
+          done:           false
+          color:          "red"
+          icon:           "thumbs-down"
+        NC:
+          text:           "Not checked yet"
+          status:         "info"
+          insertSolution: false
+          done:           false
+          color:          "aqua"
+          icon:           "frown-o"
+

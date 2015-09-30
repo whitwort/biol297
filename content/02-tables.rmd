@@ -10,7 +10,7 @@ R has great built-in support for working with data in tabular format.  Tables in
 
 You can think of data.frame structures as a specialized kind of a list where each component vector (column) is of the same length.
 
-## A note about table structure
+# A note about table structure
 
 Before we dive into loading and working with tabular data in R, it's worth taking a moment to consider a key difference between data formatting expectations in advanced statistical software packages like R and the bad habits most folks develop after years of working in Excel.  If you're used to working in other stats packages like SAS, SPSS or Minitab, you can skip this section.
 
@@ -47,7 +47,7 @@ Day | Group   | Response
 
 If you have a lot of data formatted in the first of these two formats, don't worry!  Restructuring your tables is easy to do in R as is generating any new categorical label columns you might need (for example, the Group column above).  The reading assignment for next class (Wickham 2014) goes into the topic of correct data formatting, called "Tidy Data", in greater depth.
 
-## Start the exercise
+# Start the exercise
 
 This document is the first exercise that will ask you to contribute your own solutions.  To get started, make sure you've created a "bio297" project in R Studio (choose "New Directory" then "Empty Project" and use "bio297" for the Directory Name; leave "~" as the parental path).  Then load the `bio297` project.
 
@@ -61,7 +61,7 @@ If you check your "Files" tab in R Studio you should see a file named "02-tables
 
 To check your progress as you work through this exercise you can compile the document using the "Knit HTML" button on the R Studio tool bar.
 
-## Loading tabular data
+# Loading tabular data
 
 R can import tabular data from a wide variety of source file formats.  Base R has excellent support for loading data from text files using the `read.table` family of functions.  There are also a wide array of R packages that support loading data from databases and other binary file formats.
 
@@ -86,7 +86,7 @@ head(codons)
 
 The `read.table` function takes a large number of optional arguments which allows it to adapt to a wide variety of different file formats.  See the help page for extensive details.  Here we've specified `header = TRUE` because the first line of our file contains column headings.  The `stringsAsFactors = FALSE` argument tells R not to try to convert text columns to a special type of data structure called a `factor`.  Factors are intended to flag strings as describing levels of a categorical variable.  They are a more advanced topic that we will talk more about later this the week.
 
-## Accessing data in a data.frame
+# Accessing data in a data.frame
 
 Once your data is loaded into a data.frame (table), you can access vectors of data for individual variables in the table using the `$` syntax:
 
@@ -98,7 +98,7 @@ codons$codon
 
 Your turn:  in the code block below print out the contents of the `aminoAcid` variable.
 
-```{r}
+```{r grade = TRUE}
 # Enter your code here!
 ```
 
@@ -106,7 +106,7 @@ Your turn:  in the code block below print out the contents of the `aminoAcid` va
 
 Remember `length`?  Verify that I have given you a table with all 64 possible sequences:
 
-```{r}
+```{r grade = TRUE}
 # Enter your code here!
 
 ```
@@ -125,7 +125,7 @@ Indexing a data frame works the same was as it does for a matrix: you can specif
 
 Use indexing to print out the first three rows of `codons` (with both columns):
 
-```{r}
+```{r  grade = TRUE}
 # Enter your code here!
 
 ```
@@ -141,7 +141,7 @@ codons$codon == codons[ , "codon"]
 ```
 
 
-## Calculating a new column
+# Calculating a new column
 
 We can use the `$` syntax (like the `[...]`) to assign data to existing columns on a `data.frame` or to create a new column.  Let's say that we want to add a new column to our `codons` table that will annotate what `type` of amino acid is encoded by each codon (non-polar, polar, acidic or basic).
 
@@ -153,7 +153,7 @@ codons$type <- NA
 
 Have a look at the `codons` data frame to see what happened:
 
-```{r}
+```{r grade = TRUE}
 # Enter your code here!
 
 ```
@@ -171,7 +171,7 @@ basic     <- c( "R", "H", "K"                                    )
 
 Use the `length` (and possibly `c`) to verify that four variables cover annotations for all 20 amino acids.
 
-```{r}
+```{r grade = TRUE}
 # Enter your code here!
 ```
 
@@ -197,7 +197,7 @@ Check to see if it worked!
 
 Now annotate the other three groups of amino acids in your table:
 
-```{r}
+```{r grade = TRUE}
 # Enter your code here!
 ```
 
@@ -207,7 +207,7 @@ Notice how we accomplished this task by composing a few minimal data structures,
 
 This is much easier to do when working with tabular data in R than it is in traditional spreadsheet packages or other statistical environments.
 
-## Adding row names
+# Adding row names
 
 So far we've worked with named columns on our table (e.g. `aminoAcid`, `type`) which has allowed us to refer to columns using character strings.  If each row in your table can be **uniquely** named, you can use a character vector to names to rows for use in indexing.  To do this, use the `row.names` function.
 
@@ -235,7 +235,7 @@ Each codon sequence is unique, so I've used this sequence for the names.  We can
 codons["AUG", ]
 ```
 
-## Translation
+# Translation
 
 Indexing on named rows is a powerful feature.  Let's push it a little further by using our `codons` table to do translation!
 
@@ -247,7 +247,7 @@ ORF1 <- c("AUG", "GCA", "GGG", "AGC", "GUA", "UGC", "CUU", "UGA")
 
 Use indexing syntax and your codons data frame to translate this ORF.  It can be done in one line!
 
-```{r}
+```{r grade = TRUE}
 # Enter your code here!
 ```
 

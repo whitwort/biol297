@@ -7,7 +7,10 @@
 #'
 #' @export
 #'
-view <- function(url = config$templateData$baseURL) { rstudio::viewer(url) }
+view <- function(url = config$templateData$baseURL) { 
+  config <- loadConfig()
+  rstudio::viewer(url) 
+}
 
 #' List available excercises for this course
 #'
@@ -16,7 +19,8 @@ view <- function(url = config$templateData$baseURL) { rstudio::viewer(url) }
 #' @export
 #'
 listExercises <- function() {
-  exercises   <- manifest$section == "Exercises"
+  manifest  <- loadManifest()
+  exercises <- manifest$section == "Exercises"
   
   data.frame( title = manifest$title[exercises]
             , file  = manifest$file[exercises]
@@ -26,14 +30,14 @@ listExercises <- function() {
   
 }
 
-#' Start new exercises for this course
+#' Fetch new exercises and data for this course
 #' 
-#' Calling \code{\link{start}} will create a local copy of any new .r or .rmd 
+#' Calling \code{\link{Fetch}} will create a local copy of any new .r or .rmd 
 #' files for exercises for this course and update your data subfolder with 
 #' related data files.
 #' 
 #' Existing files will NOT be overwriten.  If you want a fresh copy of an 
-#' exercise simply rename your old file and call \code{\link{start}} again.
+#' exercise simply rename your old file and call \code{\link{Fetch}} again.
 #' 
 #' See \code{\link{submit}} to submit your solutions for review.
 #' 
@@ -42,15 +46,15 @@ listExercises <- function() {
 #'   
 #' @export
 #' 
-start <- function(data = "data") {
+fetch <- function(data = "data") {
   checkStudent()
+  conf <- loadConfig()
   
   exercises <- listExercises()
   for (file in exercises$file) {
     
     if (!file.exists(file)) {
-      s <- readLines(file.path(contentPath, file))
-      writeLines(s[s != "##"],  file)
+      file.copy(file.path(conf$exercisePath, file), file)
       message("Exercise file created: ", file)
     }
     
@@ -58,12 +62,12 @@ start <- function(data = "data") {
   
   if (!dir.exists(data)) { dir.create(data) }
   
-  dataFiles <- list.files(dataPath)
+  dataFiles <- list.files(conf$dataPath)
   for (file in dataFiles) {
     
     local <- file.path(data, file)
     if (!file.exists(local)) {
-      file.copy( file.path(dataPath, file)
+      file.copy( file.path(conf$dataPath, file)
                , local
                )
       message("Data file created: ", data, "/", file)
@@ -71,7 +75,7 @@ start <- function(data = "data") {
     
   }
   
-  if (!dir.exists(submitPath)) { dir.create(submitPath) }
+  if (!dir.exists(conf$submitPath)) { dir.create(conf$submitPath) }
   
 }
 
@@ -84,24 +88,39 @@ start <- function(data = "data") {
 #'
 #' @export
 submit <- function(exercise) {
+  
   checkStudent()
+  conf <- loadConfig()
   
-  if (!dir.exists(submitPath)) { dir.create(submitPath) }
-  
-  archivePath <- file.path(submitPath, "archive")
-  if (!dir.exists(archivePath)) { dir.create(archivePath) }
+  if (!dir.exists(conf$submitPath)) { dir.create(conf$submitPath) }
   
   if (!file.exists(exercise)) { 
     stop("There is no source file named: ", exercise)
   }
   
   base     <- fileBase(exercise)
-  outPath  <- file.path(submitPath, paste(base, ctimeStr(), "html", sep = "."))
+  outPath  <- file.path(conf$submitPath, paste(base, ctimeStr(), "html", sep = "."))
   
   message("Knitting & rendering...")
+  html <- rmarkdown::html_document()
+  
+  exDb         <- readRDS(file.path(conf$exercisePath, "exercises.rds"))
+  gradedChunks <- exDb[[base]]
+
+  chunkFeedback <- function(x, options) {
+    if (options$label %in% gradedChunks) {
+      insert <- paste("<div>", formatFeedbackChunk(options$label), "</div>", sep="")
+      paste(x, insert, sep = "\n")
+    } else {
+      x
+    }
+  }
+  html$knitr <- list(knit_hooks = list(chunk = chunkFeedback))
+  
   rmarkdown::render( exercise
-                   , output_file = outPath
-                   , output_dir  = submitPath
+                   , output_format = html
+                   , output_file   = outPath
+                   , output_dir    = conf$submitPath
                    )
   
   message("Submitted: ", base)
@@ -114,25 +133,33 @@ submit <- function(exercise) {
 #'
 status <- function() {
   checkStudent()
+  conf <- loadConfig()
+  
   username <- currentUser()
   message("Status for: ", username)
   
-  dataPath <- file.path(exercisePath, paste(username, "rds", sep = "."))
+  dataPath <- file.path(conf$exercisePath, paste(username, "rds", sep = "."))
   if (!file.exists(dataPath)) {
     stop("You do not appear to be a student in this course.")
   }
   
+  message("Use bio297::feedback() to launch the feedback viewer.")
+  
   studentData <- readRDS(dataPath)
   plyr::ldply( fileBase(listExercises()$file)
              , function(base) {
-                  version   <- latestVersion(base)
+                  version   <- latestVersion(base, conf$submitPath)
                   submitted <- if (is.na(version)) { FALSE } else { TRUE }
                   received  <- !( is.null(studentData$exercises[[base]]) || 
                                   is.null(studentData$exercises[[base]][[version]])
                                 )
                   if (received) {
-                    response <- !(is.na(studentData$exercises[[base]][[version]]$response))
                     done     <- studentData$exercises[[base]][[version]]$done
+                    if (done) {
+                      response <- TRUE
+                    } else {
+                      response <- !(is.na(studentData$exercises[[base]][[version]]$response))
+                    }
                   } else {
                     response <- FALSE
                     done     <- FALSE
@@ -143,10 +170,39 @@ status <- function() {
                             , received      = received
                             , feedback      = response
                             , done          = done
-                            , version = version
+                            , version       = version
+                            , stringsAsFactors = FALSE
                             )
                }
              )
+}
+
+#' Launch a shiny app to view exercise feedback.
+#'
+#' @export
+#'
+feedback <- function(skin = "purple") {
+  checkStudent()
+  conf    <- loadConfig()
+  student <- currentUser()
+  
+  message("You may find bugs in this feature; please let me know!")
+  
+  dataPath <- file.path(conf$exercisePath, paste(student, "rds", sep = "."))
+  if (!file.exists(dataPath)) {
+    stop("You do not appear to be a student in this course.")
+  }
+  studentData <- readRDS(dataPath)
+  
+  app <- shinyApp( ui     = feedbackUI(conf, studentData, skin)
+                 , server = feedbackServer(conf, studentData)
+                 )
+  
+  runApp(app)
+}
+
+formatFeedbackChunk <- function(chunk) {
+  paste("{{chunk-feedback-", chunk, "}}", sep = "")
 }
 
 checkStudent <- function() {
@@ -158,6 +214,3 @@ checkStudent <- function() {
          directory must be '~/bio297').")
   }
 }
-
-
-
